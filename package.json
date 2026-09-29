@@ -1,0 +1,22 @@
+{
+  "name": "home-finder",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Home Finder - automatsko praćenje oglasa za placeve, kuće i vikendice na Fruškoj gori",
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "setup": "npm install && npm run db:setup -w server",
+    "dev": "concurrently -n server,client -c blue,green \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build -w server && npm run build -w client",
+    "start": "npm run start -w server",
+    "test": "npm run test -w server",
+    "vapid": "npm run vapid -w server",
+    "scrape": "npm run scrape -w server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.4"
+  }
+}

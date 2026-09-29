@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// Oglas pronađen na nekom od izvornih sajtova.
+/// Čuvaju se samo oglasi iz lokacija Zapadne/Istočne Fruške gore.
+/// `status` određuje da li oglas prolazi filtere (ODOBREN), traži ručnu proveru (ZA_PROVERU)
+/// ili je odbijen (ODBIJEN) - odbijeni se ne prikazuju, ali se ponovo ocenjuju kada se promene pravila.
+model Oglas {
+  id              Int       @id @default(autoincrement())
+  izvor           String // KP | HALO | NEKRETNINE | NADJIDOM | OGLASI
+  izvorId         String
+  link            String    @unique
+  naslov          String
+  opis            String?
+  cena            Float? // EUR
+  tipNekretnine   String // PLAC | KUCA | VIKENDICA
+  povrsinaObjekta Float? // m²
+  povrsinaPlaca   Float? // m²
+  lokacija        String?
+  mesto           String? // prepoznato mesto (npr. "Krušedol")
+  grupaLokacije   String // ZAPADNA_FG | ISTOCNA_FG
+  lokacijaIzOpisa Boolean  @default(false)
+  slika           String?
+  status          String // ODOBREN | ZA_PROVERU | ODBIJEN
+  razlogStatusa   String?
+  novo            Boolean   @default(true)
+  omiljeno        Boolean   @default(false)
+  arhivirano      Boolean   @default(false)
+  obavesteno      Boolean   @default(false)
+  objavljeno      DateTime?
+  pronadjeno      DateTime  @default(now())
+  azurirano       DateTime  @updatedAt
+
+  @@unique([izvor, izvorId])
+  @@index([status, grupaLokacije, tipNekretnine])
+  @@index([pronadjeno])
+}
+
+/// Oglasi koji su već obrađeni a nisu sa ciljanih lokacija - da se ne bi ponovo otvarale njihove stranice.
+model VidjenOglas {
+  id        Int      @id @default(autoincrement())
+  izvor     String
+  izvorId   String
+  pronadjen DateTime @default(now())
+
+  @@unique([izvor, izvorId])
+}
+
+/// Jedan red (id = 1) sa pravilima filtriranja koja se menjaju iz dashboard-a.
+model Podesavanja {
+  id                     Int      @id @default(1)
+  placMinPovrsina        Float    @default(500)
+  placMaxPovrsina        Float    @default(7000)
+  placMaxCena            Float    @default(26000)
+  kucaMaxCena            Float    @default(70000)
+  kucaMinPovrsinaPlaca   Float    @default(700)
+  kuceBezPlacaZaProveru  Boolean  @default(true)
+  bezCeneZaProveru       Boolean  @default(true)
+  kursEurRsd             Float    @default(117.2)
+  intervalMinuta         Int      @default(12)
+  skeniranjeAktivno      Boolean  @default(true)
+  brojStranaPoPretrazi   Int      @default(3)
+  aktivniIzvori          String   @default("[\"KP\",\"HALO\",\"NEKRETNINE\",\"NADJIDOM\",\"OGLASI\"]") // JSON niz
+  pretrage               String?  // JSON: korisnički URL-ovi pretrage po izvoru (prazno = podrazumevani)
+  azurirano              DateTime @updatedAt
+}
+
+model PushPretplata {
+  id         Int      @id @default(autoincrement())
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  grupe      String   @default("[\"ZAPADNA_FG\",\"ISTOCNA_FG\"]") // JSON niz
+  kategorije String   @default("[\"PLAC\",\"KUCA\",\"VIKENDICA\"]") // JSON niz
+  zaProveru  Boolean  @default(false) // obaveštenja i za oglase "Za proveru"
+  uredjaj    String?
+  kreirano   DateTime @default(now())
+}
+
+model SkeniranjeLog {
+  id          Int       @id @default(autoincrement())
+  pocetak     DateTime  @default(now())
+  kraj        DateTime?
+  status      String    @default("U_TOKU") // U_TOKU | USPESNO | GRESKA
+  pregledano  Int       @default(0)
+  novih       Int       @default(0)
+  odobrenih   Int       @default(0)
+  detalji     String? // JSON: statistika po izvoru i greške
+}

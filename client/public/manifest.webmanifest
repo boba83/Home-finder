@@ -1,0 +1,14 @@
+{
+  "name": "Home Finder",
+  "short_name": "Home Finder",
+  "description": "Automatsko praćenje placeva, kuća i vikendica na Fruškoj gori",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6faf7",
+  "theme_color": "#166534",
+  "lang": "sr",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
